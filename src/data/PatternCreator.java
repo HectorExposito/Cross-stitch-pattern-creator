@@ -228,53 +228,107 @@ public class PatternCreator {
 	private void DivideConvertedImage() {
 		RemoveFilesFromDirectory();
 		int numberOfImage=0;
-		
-		if(convertedImage.getWidth()<MAX_WIDTH_FOR_PDF && convertedImage.getHeight()<MAX_HEIGHT_FOR_PDF) {
-			try {
+		int extraWidthToDraw=convertedImage.getWidth()%MAX_WIDTH_FOR_PDF;
+		int extraHeightToDraw=convertedImage.getHeight()%MAX_HEIGHT_FOR_PDF;
+		int startX=0;
+		int startY=0;
+		int sumX=0;
+		int sumY=0;
+		try {
+			if(convertedImage.getWidth()<MAX_WIDTH_FOR_PDF && convertedImage.getHeight()<MAX_HEIGHT_FOR_PDF) {
+				
 				ImageIO.write(convertedImage,"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}else if(convertedImage.getWidth()<MAX_WIDTH_FOR_PDF){
-			for(int i=0;i<convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF;i++) {
-			   try {
-					ImageIO.write(convertedImage.getSubimage(convertedImage.getWidth(), MAX_HEIGHT_FOR_PDF*i,
+				
+			}else if(convertedImage.getWidth()<MAX_WIDTH_FOR_PDF){
+				
+				for(int i=0;i<convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF;i++) {
+					ImageIO.write(convertedImage.getSubimage(0, MAX_HEIGHT_FOR_PDF*i,
 							convertedImage.getWidth(), MAX_HEIGHT_FOR_PDF),
 							"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
 					numberOfImage++;
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
-			}
-		}else if(convertedImage.getHeight()<MAX_HEIGHT_FOR_PDF) {
-			for(int i=0;i<convertedImage.getWidth()/MAX_WIDTH_FOR_PDF;i++) {
-				try {
-					ImageIO.write(convertedImage.getSubimage(MAX_WIDTH_FOR_PDF*i, convertedImage.getHeight(),
+				
+				if(convertedImage.getHeight()%MAX_HEIGHT_FOR_PDF>0) {
+					extraHeightToDraw=convertedImage.getHeight()%MAX_HEIGHT_FOR_PDF;
+					ImageIO.write(convertedImage.getSubimage(0, convertedImage.getHeight()-extraHeightToDraw,
+							convertedImage.getWidth(), extraHeightToDraw),
+							"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
+					numberOfImage++;
+				}
+				
+			}else if(convertedImage.getHeight()<MAX_HEIGHT_FOR_PDF) {
+				
+				for(int i=0;i<convertedImage.getWidth()/MAX_WIDTH_FOR_PDF;i++) {
+					ImageIO.write(convertedImage.getSubimage(MAX_WIDTH_FOR_PDF*i, 0,
 							MAX_WIDTH_FOR_PDF, convertedImage.getHeight()),
 							"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
 					numberOfImage++;
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
-			}
-		}else {
-			for(int i=0;i<convertedImage.getWidth()/MAX_WIDTH_FOR_PDF;i++) {
-				for(int j=0;j<convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF;j++) {
-					try {
-						ImageIO.write(convertedImage.getSubimage(MAX_WIDTH_FOR_PDF*i, MAX_HEIGHT_FOR_PDF*j,
-								MAX_WIDTH_FOR_PDF, MAX_HEIGHT_FOR_PDF),
-								"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
-						numberOfImage++;
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+				
+				if(convertedImage.getWidth()%MAX_WIDTH_FOR_PDF>0) {
+					extraWidthToDraw=convertedImage.getWidth()%MAX_WIDTH_FOR_PDF;
+					ImageIO.write(convertedImage.getSubimage(convertedImage.getWidth()-extraWidthToDraw, 0,
+							extraWidthToDraw, convertedImage.getHeight()),
+							"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
+					numberOfImage++;
+				}
+				
+			}else {
+				boolean divide=false;
+				for(int i=0;i<=convertedImage.getWidth()/MAX_WIDTH_FOR_PDF;i++) {
+					for(int j=0;j<=convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF;j++) {
+						if(i==convertedImage.getWidth()/MAX_WIDTH_FOR_PDF && extraWidthToDraw>0) {
+							if(j==convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF&&extraHeightToDraw>0) {
+								startX=convertedImage.getWidth()-extraWidthToDraw;
+								startY= convertedImage.getHeight()-extraHeightToDraw;
+								sumX=extraWidthToDraw;
+								sumY=extraHeightToDraw;
+								divide=true;
+							}else if(j!=convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF) {
+								startX=convertedImage.getWidth()-extraWidthToDraw;
+								startY= MAX_HEIGHT_FOR_PDF*j;
+								sumX=extraWidthToDraw;
+								sumY=MAX_HEIGHT_FOR_PDF;
+								divide=true;
+							}
+							//ImageIO.write(convertedImage.getSubimage(MAX_WIDTH_FOR_PDF*i, MAX_HEIGHT_FOR_PDF*j,
+								//	MAX_WIDTH_FOR_PDF, MAX_HEIGHT_FOR_PDF),
+								//	"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
+						}else if(i!=convertedImage.getWidth()/MAX_WIDTH_FOR_PDF){
+							if(j==convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF&&extraHeightToDraw>0) {
+								startX=MAX_WIDTH_FOR_PDF*i;
+								startY= convertedImage.getHeight()-extraHeightToDraw;
+								sumX=MAX_WIDTH_FOR_PDF;
+								sumY=extraHeightToDraw;
+								divide=true;
+							}else if(j!=convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF) {
+								startX=MAX_WIDTH_FOR_PDF*i;
+								startY= MAX_HEIGHT_FOR_PDF*j;
+								sumX=MAX_WIDTH_FOR_PDF;
+								sumY=MAX_HEIGHT_FOR_PDF;
+								divide=true;
+							}
+							
+							//ImageIO.write(convertedImage.getSubimage(MAX_WIDTH_FOR_PDF*i, MAX_HEIGHT_FOR_PDF*j,
+								//	MAX_WIDTH_FOR_PDF, MAX_HEIGHT_FOR_PDF),
+									//"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
+						}
+						if(divide) {
+							ImageIO.write(convertedImage.getSubimage(startX,startY,sumX, sumY),
+									"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
+							numberOfImage++;
+						}
+						divide=false;
+						
 					}
 				}
+				
 			}
+		}catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		
 		
 		
 	}

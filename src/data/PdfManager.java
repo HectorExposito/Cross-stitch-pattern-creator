@@ -46,8 +46,6 @@ public class PdfManager {
 			doc.add(img);
 		}
 		
-		
-		
 	}
 
 }
