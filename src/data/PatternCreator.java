@@ -3,6 +3,7 @@ package data;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,6 +30,10 @@ public class PatternCreator {
 	private Set<Stitch> stitchesUsed;
 	private final int MAX_WIDTH_FOR_PDF=440;
 	private final int MAX_HEIGHT_FOR_PDF=640;
+	private Font symbols=new Font("Arial",Font.BOLD,15);
+	private Font guides=new Font("Arial",Font.BOLD,10);
+	LinkedList<BufferedImage> captions;
+	
 	public PatternCreator() {
 		stitches=new LinkedList();
 		readColorsFile();
@@ -91,8 +96,6 @@ public class PatternCreator {
 		int marginSize=40;
 		convertedImage=new BufferedImage(marginSize*2+20*imageToConvert.getDimmensions()[0],marginSize*2+20*imageToConvert.getDimmensions()[1],BufferedImage.TYPE_INT_RGB);
 		Graphics g=convertedImage.getGraphics();
-		Font symbols=new Font("Arial",Font.BOLD,15);
-		Font guides=new Font("Arial",Font.BOLD,10);
 		g.setColor(Color.gray);
 		g.drawRect(0, 0, convertedImage.getWidth(), convertedImage.getHeight());
 		//Draw the pattern
@@ -198,8 +201,67 @@ public class PatternCreator {
 		}else if(file!=null){
 			file+=".pdf";
 			DivideConvertedImage();
-			PdfManager pdf=new PdfManager(convertedImage,file);
+			CreateCaption();
+			PdfManager pdf=new PdfManager(convertedImage,file,captions);
 		}
+	}
+
+	private void CreateCaption() {
+		captions=new LinkedList();
+		captions.add(new BufferedImage(MAX_WIDTH_FOR_PDF,MAX_HEIGHT_FOR_PDF,BufferedImage.TYPE_INT_RGB));
+		Graphics g=captions.get(0).getGraphics();
+		g.setColor(Color.WHITE);
+		g.fillRect(0, 0, MAX_WIDTH_FOR_PDF, MAX_HEIGHT_FOR_PDF);
+		g.setColor(Color.BLACK);
+		g.setFont(new Font("Arial",Font.BOLD,16));
+		g.drawString("COLORS", MAX_WIDTH_FOR_PDF/2-32, 16);
+		int number=0;
+		int squareSize=20;
+		
+		for(Stitch s:stitchesUsed) {
+			g.setColor(new Color(s.getRGB()[0],
+					s.getRGB()[1],
+					s.getRGB()[2]));
+			g.fillRect(squareSize, squareSize*number+16, squareSize, squareSize);
+			g.setColor(Color.BLACK);
+			g.drawRect(squareSize, squareSize*number+16, squareSize, squareSize);
+			if(s.getRGB()[0]+s.getRGB()[1]+s.getRGB()[2]>=382) {
+				
+				g.setColor(Color.BLACK);
+			}else {
+				g.setColor(Color.WHITE);
+			}
+			g.setFont(symbols);
+			g.drawString(s.getSymbol()+"", squareSize+7, squareSize*(number+1)+13);
+			g.setFont(guides);
+			g.setColor(Color.BLACK);
+			g.drawString(s.getDmcName()+" -> "+s.getFloss(), squareSize*2, squareSize*(number+1)+10);
+			number++;
+			
+			if(number==31) {
+				captions.add(new BufferedImage(MAX_WIDTH_FOR_PDF,MAX_HEIGHT_FOR_PDF,BufferedImage.TYPE_INT_RGB));
+				g=captions.getLast().getGraphics();
+				g.setColor(Color.WHITE);
+				g.fillRect(0, 0, MAX_WIDTH_FOR_PDF, MAX_HEIGHT_FOR_PDF);
+				g.setColor(Color.BLACK);
+				g.setFont(new Font("Arial",Font.BOLD,16));
+				g.drawString("COLORS", MAX_WIDTH_FOR_PDF/2-32, 16);
+				number=0;
+			}
+		}
+		
+		g.dispose();
+		number=0;
+		for(BufferedImage caption:captions) {
+			try {
+				ImageIO.write(caption,"png", new File("res\\pdfImages\\caption_"+number+".png"));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			number++;
+		}
+		
 	}
 
 	private String SelectFolder() {

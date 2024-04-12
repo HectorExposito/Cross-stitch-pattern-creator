@@ -75,10 +75,16 @@ public class Stitch {
 		return RGB;
 	}
 	
-	
-
 	public char getSymbol() {
 		return character;
+	}
+	
+	public String getDmcName() {
+		return dmcName;
+	}
+	
+	public String getFloss() {
+		return floss;
 	}
 
 	@Override
