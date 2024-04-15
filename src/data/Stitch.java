@@ -20,23 +20,11 @@ public class Stitch {
 	public Stitch(String fileLine,int line) {
 		String stitchData[]=fileLine.split("\\t");
 		RGB=new int[3];
-		saveData(stitchData);
 		loadSymbol(line);
+		saveData(stitchData);
 	}
 
 	private void loadSymbol(int line) {
-		String symbolPath="res\\icons\\"+line+".png";
-		try {
-			symbol=ImageIO.read(new File(symbolPath));
-			BufferedImage resizedImage = new BufferedImage(symbolSize, symbolSize, BufferedImage.TYPE_INT_RGB);
-			Graphics2D g = resizedImage.createGraphics();
-			g.drawImage(symbol, 0, 0, symbolSize, symbolSize, null);
-			g.dispose();
-			symbol=resizedImage;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		line=line+33;
 		
 		if(line>126) {

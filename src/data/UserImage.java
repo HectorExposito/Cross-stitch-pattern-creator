@@ -37,7 +37,7 @@ public class UserImage {
 		}else if(image.getWidth()>MAX_SIZE) {
 			resizeImage(MAX_SIZE,image.getHeight());
 		}else if(image.getHeight()>MAX_SIZE) {
-			resizeImage(image.getHeight(),MAX_SIZE);
+			resizeImage(image.getWidth(),MAX_SIZE);
 		}
 		
 	}
@@ -63,7 +63,7 @@ public class UserImage {
 		}
 	}
 
-	public void ShowDimmensions() {
+	public void showDimmensions() {
 		System.out.println(image.getHeight()+" "+image.getWidth());
 		image.getScaledInstance(0, 0, java.awt.Image.SCALE_SMOOTH);
 	}
@@ -78,7 +78,6 @@ public class UserImage {
 		  g.drawImage(image, 0, 0, width, height, null);
 		  g.dispose();
 		  image=resizedImage;
-		  
 		  saveColors();
 	}
 

@@ -1,6 +1,7 @@
 package data;
 
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -22,6 +23,7 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class PatternCreator {
+	
 	private final String COLORS_FILE="res\\Colors.txt";
 	private List<Stitch> stitches;
 	private UserImage imageToConvert;
@@ -202,7 +204,16 @@ public class PatternCreator {
 			file+=".pdf";
 			DivideConvertedImage();
 			CreateCaption();
-			PdfManager pdf=new PdfManager(convertedImage,file,captions);
+			PdfManager pdf=new PdfManager(file,captions);
+			JOptionPane.showMessageDialog(null, "Conversion finished!");
+			if (Desktop.isDesktopSupported()) {
+			    try {
+			        File myFile = new File(file);
+			        Desktop.getDesktop().open(myFile);
+			    } catch (IOException ex) {
+			        // no application registered for PDFs
+			    }
+			}
 		}
 	}
 

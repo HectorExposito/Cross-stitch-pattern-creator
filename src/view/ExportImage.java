@@ -128,9 +128,11 @@ public class ExportImage extends JPanel {
 		
 		JButton resizeButton=new JButton();
 		JButton exportButton=new JButton();
+		JButton newPatternButton=new JButton();
 		
 		resizeButton.setSize(leftPanel.getWidth()/2, leftPanel.getHeight()/15);
 		exportButton.setSize(leftPanel.getWidth()/2, leftPanel.getHeight()/15);
+		newPatternButton.setSize(leftPanel.getWidth()/2, leftPanel.getHeight()/15);
 		
 		resizeButton.setLocation(leftPanel.getWidth()/2-resizeButton.getWidth()/2,
 				dimmensionsPanel.getY()+resizeButton.getHeight()*4);
@@ -138,8 +140,12 @@ public class ExportImage extends JPanel {
 		exportButton.setLocation(leftPanel.getWidth()/2-exportButton.getWidth()/2,
 				resizeButton.getY()+exportButton.getHeight());
 		
+		newPatternButton.setLocation(leftPanel.getWidth()/2-newPatternButton.getWidth()/2,
+				exportButton.getY()+newPatternButton.getHeight());
+		
 		resizeButton.setText("RESIZE IMAGE");
 		exportButton.setText("EXPORT TO PDF");
+		newPatternButton.setText("CREATE NEW PATTERN");
 		
 		resizeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
@@ -156,6 +162,13 @@ public class ExportImage extends JPanel {
 				w.pc.exportToPdf();
 			}
 		});
+		
+		newPatternButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				w.setPanel(panels.SELECT_IMAGE);
+			}
+		});
+		
 		dimmensionsPanel.add(dimmensionsText);
 		widthTextPanel.add(widthText);
 		heightTextPanel.add(heightText);
@@ -166,6 +179,7 @@ public class ExportImage extends JPanel {
 		leftPanel.add(heightTextField);
 		leftPanel.add(exportButton);
 		leftPanel.add(resizeButton);
+		leftPanel.add(newPatternButton);
 		this.add(leftPanel);
 		
 	}
