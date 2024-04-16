@@ -24,9 +24,11 @@ import view.Window.panels;
 public class ExportImage extends JPanel {
 
 	private Window w;
+	private boolean exportingToPdf;
 	
 	public ExportImage(Window w) {
 		this.w=w;
+		exportingToPdf=false;
 		initialize();
 	}
 
@@ -149,23 +151,39 @@ public class ExportImage extends JPanel {
 		
 		resizeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				int width=Integer.parseInt(widthTextField.getText());
-				int height=Integer.parseInt(heightTextField.getText());
-				
-				w.pc.resizeImage(width,height);
-				w.setPanel(panels.EXPORT_IMAGE);
+				if(!exportingToPdf) {
+					int width=Integer.parseInt(widthTextField.getText());
+					int height=Integer.parseInt(heightTextField.getText());
+					
+					w.pc.resizeImage(width,height);
+					w.setPanel(panels.EXPORT_IMAGE);
+				}
 			}
 		});
 		
 		exportButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				w.pc.exportToPdf();
+				if(!exportingToPdf) {
+					Runnable r=new Runnable() {
+						@Override
+						public void run() {
+							exportingToPdf=true;
+							w.pc.exportToPdf();
+							exportingToPdf=false;
+							exportButton.setText("EXPORT TO PDF");
+						}
+					};
+					new Thread(r).start();
+					exportButton.setText("EXPORTING");
+				}
 			}
 		});
 		
 		newPatternButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				w.setPanel(panels.SELECT_IMAGE);
+				if(!exportingToPdf) {
+					w.setPanel(panels.SELECT_IMAGE);
+				}
 			}
 		});
 		

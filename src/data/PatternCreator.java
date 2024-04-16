@@ -22,7 +22,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-public class PatternCreator {
+public class PatternCreator{
 	
 	private final String COLORS_FILE="res\\Colors.txt";
 	private List<Stitch> stitches;
@@ -34,6 +34,7 @@ public class PatternCreator {
 	private final int MAX_HEIGHT_FOR_PDF=640;
 	private Font symbols=new Font("Arial",Font.BOLD,15);
 	private Font guides=new Font("Arial",Font.BOLD,10);
+	private int pixelsAlreadyDrew;
 	LinkedList<BufferedImage> captions;
 	
 	public PatternCreator() {
@@ -70,32 +71,44 @@ public class PatternCreator {
 	}
 	
 	public void convertImage() {
-		List<data.Color> colors=imageToConvert.getColors();
-		Set<data.Color> differentColors=imageToConvert.getDifferentColors();
-		stitchesUsed=new HashSet<Stitch>();
-		System.out.println("DIFERENTES: "+differentColors.size());
-		stitchesToUse=new HashMap();
-		for(data.Color c: differentColors) {
-			Stitch s=getStitchForTheColor(c);
-			System.out.println(s+"->"+c.getRgb()[0]+","+c.getRgb()[1]+","+c.getRgb()[2]);
-			stitchesToUse.put(c, s);
-			stitchesUsed.add(s);
-		}
-		drawPattern();
+		Runnable r=new Runnable() {
+
+			@Override
+			public void run() {
+				List<data.Color> colors=imageToConvert.getColors();
+				Set<data.Color> differentColors=imageToConvert.getDifferentColors();
+				stitchesUsed=new HashSet<Stitch>();
+				System.out.println("DIFERENTES: "+differentColors.size());
+				stitchesToUse=new HashMap();
+				for(data.Color c: differentColors) {
+					Stitch s=getStitchForTheColor(c);
+					//System.out.println(s+"->"+c.getRgb()[0]+","+c.getRgb()[1]+","+c.getRgb()[2]);
+					stitchesToUse.put(c, s);
+					stitchesUsed.add(s);
+				}
+				drawPattern();
+				
+				//stitchesToUse=new LinkedList<Stitch>();
+				try {
+					  ImageIO.write(convertedImage, "png", new File("res\\imagen.png"));
+				  } catch (IOException e) {
+					  // TODO Auto-generated catch block
+					  e.printStackTrace();
+				  }
+				
+			}
+			
+		};
+		Thread t=new Thread(r);
+		t.start();
 		
-		//stitchesToUse=new LinkedList<Stitch>();
-		try {
-			  ImageIO.write(convertedImage, "png", new File("res\\imagen.png"));
-		  } catch (IOException e) {
-			  // TODO Auto-generated catch block
-			  e.printStackTrace();
-		  }
 	}
 	
 	private void drawPattern() {
 		int color=0;
 		int squareSize=20;
 		int marginSize=40;
+		pixelsAlreadyDrew=0;
 		convertedImage=new BufferedImage(marginSize*2+20*imageToConvert.getDimmensions()[0],marginSize*2+20*imageToConvert.getDimmensions()[1],BufferedImage.TYPE_INT_RGB);
 		Graphics g=convertedImage.getGraphics();
 		g.setColor(Color.gray);
@@ -127,6 +140,7 @@ public class PatternCreator {
 				color++;
 				g.setColor(Color.red);
 				g.drawLine(0, 20*j+marginSize, imageToConvert.getDimmensions()[0]*20+marginSize, 20*j+marginSize);
+				pixelsAlreadyDrew++;
 			}
 			g.drawLine(20*i+marginSize, 0, 20*i+marginSize, imageToConvert.getDimmensions()[1]*20+marginSize);
 		}
@@ -381,15 +395,18 @@ public class PatternCreator {
 								sumY=MAX_HEIGHT_FOR_PDF;
 								divide=true;
 							}
-							
-							//ImageIO.write(convertedImage.getSubimage(MAX_WIDTH_FOR_PDF*i, MAX_HEIGHT_FOR_PDF*j,
-								//	MAX_WIDTH_FOR_PDF, MAX_HEIGHT_FOR_PDF),
-									//"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
 						}
 						if(divide) {
-							ImageIO.write(convertedImage.getSubimage(startX,startY,sumX, sumY),
-									"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
-							numberOfImage++;
+							if(i==0 || j==0) {
+								ImageIO.write(convertedImage.getSubimage(startX,startY,sumX, sumY),
+										"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
+								numberOfImage++;
+							}else {
+								BufferedImage dividedImage=drawGuideForDividedImage(convertedImage.getSubimage(startX,startY,sumX, sumY),i,j);
+								ImageIO.write(dividedImage,"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
+								numberOfImage++;
+							}
+							
 						}
 						divide=false;
 						
@@ -406,6 +423,38 @@ public class PatternCreator {
 		
 	}
 
+	private BufferedImage drawGuideForDividedImage(BufferedImage subimage,int widthPortion, int heightPortion) {
+		int color=0;
+		int squareSize=20;
+		int marginSize=40;
+		pixelsAlreadyDrew=0;
+		BufferedImage newSubimage=new BufferedImage(marginSize+subimage.getWidth(),marginSize+subimage.getHeight(),BufferedImage.TYPE_INT_RGB);
+		Graphics g=newSubimage.getGraphics();
+		g.setColor(Color.gray);
+		g.drawRect(0, 0, newSubimage.getWidth(), newSubimage.getHeight());
+		//Draw the pattern
+		g.setColor(Color.red);
+		for(int i=0;i<subimage.getWidth();i++) {
+			g.setFont(guides);
+			int widthNumber=widthPortion*subimage.getWidth()/20+i+1;
+			g.drawString(widthNumber+"", squareSize*i+marginSize, marginSize);
+			for(int j=0;j<subimage.getHeight();j++) {
+				if(i==0) {
+					g.setFont(guides);
+					int heightNumber=heightPortion*subimage.getHeight()/20+j+1;
+					g.drawString(heightNumber+"", marginSize/2,squareSize*(j+1)+marginSize);
+				}
+				Stitch s=stitchesToUse.get(imageToConvert.getColors().get(color));
+				g.setColor(new Color(subimage.getRGB(i, j)));
+				g.drawRect(i+marginSize, j+marginSize, 1,1);
+			}
+			//g.drawLine(20*i+marginSize, 0, 20*i+marginSize, imageToConvert.getDimmensions()[1]*20+marginSize);
+		}
+		
+		g.dispose();
+		return newSubimage;
+	}
+
 	private void RemoveFilesFromDirectory() {
 		System.out.println("Eliminar ficheros");
 		for(File file:new File("res\\pdfImages").listFiles()) {
@@ -414,6 +463,11 @@ public class PatternCreator {
 			}
 		}
 		
+	}
+
+	public float getProgress() {
+		float totalPixels=imageToConvert.getDimmensions()[0]*imageToConvert.getDimmensions()[1];
+		return pixelsAlreadyDrew/totalPixels*100;
 	}
 	
 	
