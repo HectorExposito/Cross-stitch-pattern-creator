@@ -6,10 +6,12 @@ public class Color {
 
 	private int[] rgb;
 	private String hex;
+	
 	public Color(int[] rgb,String hex) {
 		this.rgb=rgb;
 		this.hex=hex;
 	}
+	
 	public int[] getRgb() {
 		return rgb;
 	}

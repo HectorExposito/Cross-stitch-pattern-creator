@@ -24,16 +24,22 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class PatternCreator{
 	
+	//Path of the file that contains all the stitch colors
 	private final String COLORS_FILE="res\\Colors.txt";
+	
 	private List<Stitch> stitches;
-	private UserImage imageToConvert;
-	private BufferedImage convertedImage;
 	private HashMap<data.Color,Stitch> stitchesToUse;
 	private Set<Stitch> stitchesUsed;
+	
+	private UserImage imageToConvert;
+	private BufferedImage convertedImage;
+	
 	private final int MAX_WIDTH_FOR_PDF=440;
 	private final int MAX_HEIGHT_FOR_PDF=640;
+	
 	private Font symbols=new Font("Arial",Font.BOLD,15);
 	private Font guides=new Font("Arial",Font.BOLD,10);
+	
 	private int pixelsAlreadyDrew;
 	LinkedList<BufferedImage> captions;
 	
@@ -361,7 +367,6 @@ public class PatternCreator{
 				}
 				
 			}else {
-				boolean divide=false;
 				for(int i=0;i<=convertedImage.getWidth()/MAX_WIDTH_FOR_PDF;i++) {
 					for(int j=0;j<=convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF;j++) {
 						if(i==convertedImage.getWidth()/MAX_WIDTH_FOR_PDF && extraWidthToDraw>0) {
@@ -370,46 +375,29 @@ public class PatternCreator{
 								startY= convertedImage.getHeight()-extraHeightToDraw;
 								sumX=extraWidthToDraw;
 								sumY=extraHeightToDraw;
-								divide=true;
 							}else if(j!=convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF) {
 								startX=convertedImage.getWidth()-extraWidthToDraw;
 								startY= MAX_HEIGHT_FOR_PDF*j;
 								sumX=extraWidthToDraw;
 								sumY=MAX_HEIGHT_FOR_PDF;
-								divide=true;
 							}
-							//ImageIO.write(convertedImage.getSubimage(MAX_WIDTH_FOR_PDF*i, MAX_HEIGHT_FOR_PDF*j,
-								//	MAX_WIDTH_FOR_PDF, MAX_HEIGHT_FOR_PDF),
-								//	"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
 						}else if(i!=convertedImage.getWidth()/MAX_WIDTH_FOR_PDF){
 							if(j==convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF&&extraHeightToDraw>0) {
 								startX=MAX_WIDTH_FOR_PDF*i;
 								startY= convertedImage.getHeight()-extraHeightToDraw;
 								sumX=MAX_WIDTH_FOR_PDF;
 								sumY=extraHeightToDraw;
-								divide=true;
 							}else if(j!=convertedImage.getHeight()/MAX_HEIGHT_FOR_PDF) {
 								startX=MAX_WIDTH_FOR_PDF*i;
 								startY= MAX_HEIGHT_FOR_PDF*j;
 								sumX=MAX_WIDTH_FOR_PDF;
 								sumY=MAX_HEIGHT_FOR_PDF;
-								divide=true;
 							}
 						}
-						if(divide) {
-							if(i==0 || j==0) {
-								ImageIO.write(convertedImage.getSubimage(startX,startY,sumX, sumY),
-										"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
-								numberOfImage++;
-							}else {
-								BufferedImage dividedImage=drawGuideForDividedImage(convertedImage.getSubimage(startX,startY,sumX, sumY),i,j);
-								ImageIO.write(dividedImage,"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
-								numberOfImage++;
-							}
-							
-						}
-						divide=false;
-						
+						BufferedImage dividedImage=drawGuideForDividedImage(convertedImage.getSubimage(startX,startY,sumX, sumY),
+								i,j,MAX_WIDTH_FOR_PDF,MAX_HEIGHT_FOR_PDF);
+						ImageIO.write(dividedImage,"png", new File("res\\pdfImages\\"+numberOfImage+".png"));
+						numberOfImage++;
 					}
 				}
 				
@@ -423,26 +411,38 @@ public class PatternCreator{
 		
 	}
 
-	private BufferedImage drawGuideForDividedImage(BufferedImage subimage,int widthPortion, int heightPortion) {
+	private BufferedImage drawGuideForDividedImage(BufferedImage subimage,int widthPortion, int heightPortion,
+			int widthSize, int heightSize) {
+		//It returns the same subimage if its the first division because it doesn't need new guides
+		if(widthPortion==0 && heightPortion==0) {
+			return subimage;
+		}
+		
 		int color=0;
 		int squareSize=20;
 		int marginSize=40;
 		pixelsAlreadyDrew=0;
 		BufferedImage newSubimage=new BufferedImage(marginSize+subimage.getWidth(),marginSize+subimage.getHeight(),BufferedImage.TYPE_INT_RGB);
 		Graphics g=newSubimage.getGraphics();
-		g.setColor(Color.gray);
-		g.drawRect(0, 0, newSubimage.getWidth(), newSubimage.getHeight());
 		//Draw the pattern
 		g.setColor(Color.red);
 		for(int i=0;i<subimage.getWidth();i++) {
 			g.setFont(guides);
-			int widthNumber=widthPortion*subimage.getWidth()/20+i+1;
-			g.drawString(widthNumber+"", squareSize*i+marginSize, marginSize);
+			if(heightPortion!=0) {
+				int widthNumber=widthPortion*widthSize/20+i-1;
+				if(widthNumber>0 || i>subimage.getWidth()-2) {
+					g.setColor(Color.red);
+					g.drawString(widthNumber+"", squareSize*i+marginSize, marginSize);
+				}
+			}
 			for(int j=0;j<subimage.getHeight();j++) {
-				if(i==0) {
+				if(i==0 && widthPortion!=0) {
 					g.setFont(guides);
-					int heightNumber=heightPortion*subimage.getHeight()/20+j+1;
-					g.drawString(heightNumber+"", marginSize/2,squareSize*(j+1)+marginSize);
+					int heightNumber=heightPortion*heightSize/20+j-1;
+					if(heightNumber>0 || j>subimage.getHeight()-2) {
+						g.setColor(Color.red);
+						g.drawString(heightNumber+"", marginSize/2,squareSize*(j+1)+marginSize);
+					}
 				}
 				Stitch s=stitchesToUse.get(imageToConvert.getColors().get(color));
 				g.setColor(new Color(subimage.getRGB(i, j)));
